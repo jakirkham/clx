@@ -16,6 +16,7 @@ import cudf
 import nvstrings
 import rmm
 import numpy as np
+from numba import cuda
 
 
 def ip_to_int(values):
@@ -87,7 +88,8 @@ def is_ip(ips):
     1    False
     dtype: bool
     """    
-    res = cudf.Series(rmm.device_array(len(ips), dtype="bool"))
+    arr = cuda.as_cuda_array(rmm.DeviceBuffer(size=len(ips))).view("bool")
+    res = cudf.Series(arr)
     ptr = res._column.data.ptr
     is_ip_REGEX = r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
     ips.str.match(is_ip_REGEX, devptr=ptr)
@@ -113,7 +115,8 @@ def is_reserved(ips):
     1    False
     dtype: bool
     """
-    res = cudf.Series(rmm.device_array(len(ips), dtype="bool"))
+    arr = cuda.as_cuda_array(rmm.DeviceBuffer(size=len(ips))).view("bool")
+    res = cudf.Series(arr)
     ptr = res._column.data.ptr
     reserved_ipv4_REGEX = r"^(2(4[0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))$"
     ips.str.match(reserved_ipv4_REGEX, devptr=ptr)
@@ -139,7 +142,7 @@ def is_loopback(ips):
     1    False
     dtype: bool
     """
-    res = cudf.Series(rmm.device_array(len(ips), dtype="bool"))
+    arr = cuda.as_cuda_array(rmm.DeviceBuffer(size=len(ips))).view("bool")
     ptr = res._column.data.ptr
     loopback_ipv4_REGEX = r"^127\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))$"
     ips.str.match(loopback_ipv4_REGEX, devptr=ptr)
@@ -165,7 +168,8 @@ def is_link_local(ips):
     1    True
     dtype: bool
     """
-    res = cudf.Series(rmm.device_array(len(ips), dtype="bool"))
+    arr = cuda.as_cuda_array(rmm.DeviceBuffer(size=len(ips))).view("bool")
+    res = cudf.Series(arr)
     ptr = res._column.data.ptr
     link_local_ipv4_REGEX = r"^169\.254\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))$"
     ips.str.match(link_local_ipv4_REGEX, devptr=ptr)
@@ -191,7 +195,8 @@ def is_unspecified(ips):
     1    False
     dtype: bool
     """
-    res = cudf.Series(rmm.device_array(len(ips), dtype="bool"))
+    arr = cuda.as_cuda_array(rmm.DeviceBuffer(size=len(ips))).view("bool")
+    res = cudf.Series(arr)
     ptr = res._column.data.ptr
     unspecified_REGEX = r"^0\.0\.0\.0$"
     ips.str.match(unspecified_REGEX, devptr=ptr)
@@ -217,7 +222,8 @@ def is_multicast(ips):
     1    True
     dtype: bool
     """
-    res = cudf.Series(rmm.device_array(len(ips), dtype="bool"))
+    arr = cuda.as_cuda_array(rmm.DeviceBuffer(size=len(ips))).view("bool")
+    res = cudf.Series(arr)
     ptr = res._column.data.ptr
     is_multicast_ipv4_REGEX = r"^(2(2[4-9]|3[0-9]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))$"
     ips.str.match(is_multicast_ipv4_REGEX, devptr=ptr)
@@ -243,7 +249,8 @@ def is_private(ips):
     1    False
     dtype: bool
     """
-    res = cudf.Series(rmm.device_array(len(ips), dtype="bool"))
+    arr = cuda.as_cuda_array(rmm.DeviceBuffer(size=len(ips))).view("bool")
+    res = cudf.Series(arr)
     ptr = res._column.data.ptr
     private_REGEX = r"(^0\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))$)|(^10\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))$)|(^127\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))$)|(^169\.254\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))$)|(^172\.(1[6-9]|2[0-9]|3[0-1])\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))$)|(^192\.0\.0\.([0-7])$)|(^192\.0\.0\.(1(7[0-1]))$)|(^192\.0\.2\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))$)|(^192\.168\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))$)|(^198\.(1[8-9])\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))$)|(^198\.51\.100\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))$)|(^203\.0\.113\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))$)|(^(2(4[0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))$)|(^255\.255\.255\.255$)"
     ips.str.match(private_REGEX, devptr=ptr)
@@ -269,7 +276,8 @@ def is_global(ips):
     1    True
     dtype: bool
     """
-    part1 = cudf.Series(rmm.device_array(len(ips), dtype="bool"))
+    arr = cuda.as_cuda_array(rmm.DeviceBuffer(size=len(ips))).view("bool")
+    part1 = cudf.Series(arr)
     ptr = part1._column.data.ptr
     is_global_REGEX = r"^(100\.(6[4-9]|[7-9][0-9]|1([0-1][0-9]|2[0-7]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))$)"
     ips.str.match(is_global_REGEX, devptr=ptr)
